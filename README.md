@@ -3,6 +3,8 @@
 Produces two complementary keypoint datasets from monocular sprint videos, 30 fps,
 for SMAS gait analysis.
 
+> **Always use `outputs_with_moge2/` results. Never use `no_moge2` outputs.**
+
 ---
 
 ## Quick Start

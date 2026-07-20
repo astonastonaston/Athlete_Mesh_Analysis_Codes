@@ -45,7 +45,7 @@ sum of K Gaussian pulses:
 Usage
 -----
 python core/rollout_motion_optim.py \\
-    --in_pkl  outputs/.../opt_cam_human_motions_v2.pkl \\
+    --in_pkl  $SAM3D_DIR/outputs/smpl_sequences/<Athlete>/smpl_sequence.pkl \\
     --out_pkl outputs/.../rollout_result.pkl \\
     --smpl_model_path /path/to/SMPL_NEUTRAL.pkl \\
     --video   /path/to/video.mp4 \\
@@ -2488,7 +2488,8 @@ def main():
     betas_raw     = sp.get("betas")
     go_cam_raw    = sp.get("global_orient")
     transl_raw    = sp.get("transl_final")
-    focal_raw     = sp.get("focal_length")
+    # focal_length lives inside smpl_parameters; fall back to top-level for older pkls
+    focal_raw     = sp.get("focal_length") if sp.get("focal_length") is not None else data.get("focal_length")
     obs2d_raw     = data.get("smpl_kpts2d_24")
 
     for name, val in [
@@ -2702,7 +2703,7 @@ if __name__ == "__main__":
 
 # ── Example ───────────────────────────────────────────────────────────────────
 # python core/rollout_motion_optim.py \
-#     --in_pkl  outputs/joint_cam_human_estimates/opt_cam_human_motions_v2.pkl \
+#     --in_pkl  $SAM3D_DIR/outputs/smpl_sequences/Goree/smpl_sequence.pkl \
 #     --out_pkl outputs/rollout/rollout_full.pkl \
 #     --smpl_model_path /home/nan/Desktop/NRMFOptim/smplhub/smpl/SMPL_N_model_generate_from_npz.pkl \
 #     --video   /home/nan/Desktop/NRMFOptim/sprintMesh2/sprint_videos/original.mp4 \
