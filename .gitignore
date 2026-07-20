@@ -1,0 +1,15 @@
+# Pipeline outputs
+sprint_lowerbody_dataset/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/

@@ -1,0 +1,77 @@
+# Conda environment for the sprint reconstruction pipeline.
+# Covers Steps 0, 1, 2, and 4 (frame extraction, SAM3D, rollout, export).
+# Step 3 (MHR skeleton fitting) uses a separate pixi environment — see README.md.
+#
+# Create:
+#   conda env create -f environment.yml
+#   conda activate sam_3d_body
+#
+# PyTorch: the line below installs CPU-only torch.
+# For GPU support, install torch manually first:
+#   conda activate sam_3d_body
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# Then run: pip install -r requirements.txt
+
+name: sam_3d_body
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    # Core numerics
+    - numpy
+    - scipy
+    - pandas
+
+    # PyTorch — CPU fallback; replace with GPU wheel if available (see above)
+    - torch
+    - torchvision
+
+    # Computer vision
+    - opencv-python
+    - Pillow
+    - scikit-image
+
+    # 3D body model
+    - smplx
+
+    # SAM3D / detection dependencies
+    - pytorch-lightning
+    - yacs
+    - einops
+    - timm
+    - dill
+    - rich
+    - hydra-core
+    - hydra-colorlog
+    - pyrootutils
+    - webdataset
+    - chump
+    - networkx==3.2.1
+    - roma
+    - joblib
+    - loguru
+    - optree
+    - fvcore
+    - pycocotools
+    - xtcocotools
+    - tensorboard
+    - huggingface_hub
+    - wandb
+    - cython
+    - jsonlines
+    - tqdm
+
+    # Visualisation (optional — only needed for tune_heel.py overlay)
+    - matplotlib
+    - seaborn
+
+    # Detectron2 — required for SAM3D person detection
+    # Install separately after activating the env:
+    #   pip install 'git+https://github.com/facebookresearch/detectron2.git@a1ce2f9' --no-build-isolation --no-deps
+
+    # MoGe — required for metric-scale focal length (Step 1, MoGE-2)
+    # Install separately:
+    #   pip install git+https://github.com/microsoft/MoGe.git

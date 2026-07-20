@@ -1,0 +1,19 @@
+# Minimal requirements for Steps 2 + 4 only (rollout optimization + JSON export).
+# If you only need to re-run the optimization or export on existing pkl files,
+# you do NOT need the full SAM3D environment — install just these.
+#
+# Usage:
+#   pip install -r requirements.txt
+#
+# PyTorch: install manually first for your platform:
+#   CPU:  pip install torch torchvision
+#   GPU:  pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#         (replace cu121 with your CUDA version — see https://pytorch.org/get-started/locally/)
+
+torch
+torchvision
+numpy
+scipy
+smplx
+opencv-python
+tqdm
