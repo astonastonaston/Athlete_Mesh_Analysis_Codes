@@ -1,7 +1,7 @@
-# Sprint Reconstruction — Lowerbody Keypoint Dataset
+# Sprint Reconstruction — Keypoint Dataset
 
-Produces 3D lower-body keypoints (21 joints, 30 fps, Y-up metres) from monocular sprint
-videos for SMAS gait analysis.
+Produces two complementary keypoint datasets from monocular sprint videos, 30 fps,
+for SMAS gait analysis.
 
 > **Always use `outputs_with_moge2/` results. Never use `no_moge2` outputs.**
 
@@ -34,12 +34,12 @@ Sprint video
   -> [Step 1]  SAM3D-Body detection + MHR->SMPL    scripts/run_sam3d_mhr_smpl.sh
   -> [Step 2]  Rollout optimization                 scripts/run_rollout_all_athletes.sh
   -> [Step 3]  MHR skeleton fitting                 scripts/run_mhr_kpts.sh
-  -> [Step 4]  Foot landmark derivation + JSON      export/export_lowerbody.py
+  -> [Step 4]  Keypoint export (2 datasets)          export/export_lowerbody.py
 ```
 
 Step 3 runs `smpl_to_mhr_kpts.py` from the external MHR library via its pixi env.
-Step 4 reads the bone rotation matrices from Step 3 and derives the three foot landmarks
-(heel_tip, heel_contact, toe_tip) that are not direct skeleton joints.
+Step 4 writes two JSON files per athlete: **v1** (SMPL-24, 2-D + orientation vectors)
+and **v2** (MHR 21-joint lower-body, 3-D world + 2-D).
 
 ---
 
@@ -192,7 +192,7 @@ Output: `outputs_with_moge2/rollout_results/<Athlete>/mhr_kpts.pkl`
 > Note: CPU only (~15–30 min per athlete). The MHR library's `pymomentum` backend
 > was compiled against CPU-only PyTorch and segfaults if moved to CUDA.
 
-### Step 4 — Foot landmark derivation + JSON export
+### Step 4 — Keypoint export (two datasets)
 
 ```bash
 cd /path/to/Athlete_Mesh_Analysis_Codes
@@ -202,25 +202,51 @@ python export/export_lowerbody.py                    # all athletes
 python export/export_lowerbody.py --athlete Goree    # single athlete
 ```
 
-`export_lowerbody.py` does two things in one pass:
-1. **Foot landmark derivation** — reads the `l_foot_world_rot` / `r_foot_world_rot` /
-   `l_ball_world_rot` / `r_ball_world_rot` bone rotation matrices from `mhr_kpts.pkl`
-   and computes the three derived landmarks that are not direct skeleton joints:
-   ```
-   heel_tip(t)     = l_foot + R_foot @ POSTERIOR * 5.5 cm
-   heel_contact(t) = l_foot + R_foot @ POSTERIOR * 5.0 cm  +  R_foot @ INFERIOR * 11.0 cm
-   toe_tip(t)      = l_ball + R_ball @ DISTAL    * 3.5 cm
-   ```
-2. **JSON export** — assembles all 21 joints (skeleton + derived) with world positions
-   and pixel projections and writes to `sprint_lowerbody_dataset/data/<Athlete>.json`.
+One run writes **both** datasets:
 
-Output: `sprint_lowerbody_dataset/data/<Athlete>.json`
+| Dataset | Output path |
+|---------|-------------|
+| v1 — SMPL-24 | `sprint_smpl_dataset/data/<Athlete>.json` |
+| v2 — MHR lower-body | `sprint_lowerbody_dataset/data/<Athlete>.json` |
+
+v1 requires only `rollout.pkl`; v2 additionally requires `mhr_kpts.pkl` (Step 3).
 
 ---
 
 ## Output Format
 
-21 joints per frame, 30 fps, Y-up metres (floor at Y=0, sprint direction ≈ +X).
+### Dataset v1 — `sprint_smpl_dataset/data/<Athlete>.json`
+
+24 standard SMPL joints, 30 fps.  Per-frame 2-D pixel coordinates only (no world
+positions).  Also includes per-frame body orientation vectors.
+
+```
+Joint names (SMPL-24):
+  pelvis
+  left_hip, right_hip, spine1
+  left_knee, right_knee, spine2
+  left_ankle, right_ankle, spine3
+  left_foot, right_foot, neck
+  left_collar, right_collar, head
+  left_shoulder, right_shoulder
+  left_elbow, right_elbow
+  left_wrist, right_wrist
+  left_hand, right_hand
+```
+
+Per-frame fields (`frames[t]`):
+- `kpts_2d` — `(24, 2)` pixel coordinates `[u_right, v_down]`
+- `spine_up`, `chest_fwd`, `body_right` — unit 3-D vectors in Y-DOWN camera frame
+- `facing_yaw_deg` — angle of chest_fwd (XZ plane) relative to sprint_dir
+- `spine_vertical_deg` — angle of spine_up from world vertical
+
+Top-level fields: `world_up` ([0,−1,0] = physical up in Y-DOWN frame), `sprint_dir`,
+`joint_names`, `skeleton` (23 edges).
+
+### Dataset v2 — `sprint_lowerbody_dataset/data/<Athlete>.json`
+
+21 lower-body joints from the MHR skeleton (127-joint, step 3), 30 fps.
+3-D world positions (Y-up, floor at Y=0, sprint ≈ +X) and 2-D pixel coordinates.
 
 ```
 root
@@ -228,26 +254,26 @@ l/r_upleg, l/r_lowleg
 l/r_foot,  l/r_heel_tip*,  l/r_heel_contact*
 l/r_talocrural, l/r_subtalar, l/r_transversetarsal, l/r_ball, l/r_toe_tip*
 ```
-`*` derived from MHR bone rotation matrices (not direct skeleton joints):
-
+`*` derived from MHR bone rotation matrices:
 ```
-heel_tip(t)     = l_foot + R_foot @ POSTERIOR * 5.5 cm
-heel_contact(t) = l_foot + R_foot @ POSTERIOR * 5.0 cm  +  R_foot @ INFERIOR * 11.0 cm
-toe_tip(t)      = l_ball + R_ball @ DISTAL    * 3.5 cm
+heel_tip(t)     = foot + R_foot @ POSTERIOR * 5.5 cm
+heel_contact(t) = foot + R_foot @ POSTERIOR * 5.0 cm  +  R_foot @ INFERIOR * 11.0 cm
+toe_tip(t)      = ball + R_ball @ DISTAL    * 3.5 cm
 ```
 
-Each joint in the JSON has `world_m: (T,3)` and `pixel_uv: (T,2)` fields.
-The file also contains `camera` (per-frame focal length, rotation, translation) and
+Per-joint fields (`joints[name]`):
+- `world_m` — `(T, 3)`, Y-up metres, floor at Y=0
+- `pixel_uv` — `(T, 2)`, pixel `[u_right, v_down]`, `null` if behind camera
+
+Also contains `camera` (per-frame focal length, rotation, translation) and
 `skeleton_edges` for visualisation.
 
-### Re-tuning foot distances
-
-If foot landmarks look off for a new athlete, use the interactive tuner:
+### Re-tuning foot distances (v2)
 
 ```bash
 cd export
 python tune_heel.py --athlete Goree   # needs $DISPLAY and video in $DATASET_DIR
-# z/x c/v b/n m/,  adjust distances  |  r export JSON  |  w save to export_lowerbody.py
+# z/x c/v b/n m/,  adjust distances  |  r: re-export JSON  |  w: save to script
 ```
 
 ---
@@ -270,7 +296,7 @@ Athlete_Mesh_Analysis_Codes/
     rollout_motion_optim.py         <- Step 2: optimizer (self-contained)
     __init__.py
   export/
-    export_lowerbody.py             <- Step 4: foot landmark derivation + JSON export
+    export_lowerbody.py             <- Step 4: exports v1 (SMPL-24) + v2 (MHR lower-body)
     tune_heel.py                    <- interactive foot distance tuner
   scripts/
     run_sam3d_mhr_smpl.sh           <- Step 1: SAM3D + MHR->SMPL
