@@ -41,7 +41,7 @@ SKIP_EXISTING="${SKIP_EXISTING:-0}"
 
 if [ ! -f "${MHR_SCRIPT}" ]; then
     echo "[ERROR] smpl_to_mhr_kpts.py not found: ${MHR_SCRIPT}"
-    echo "  Make sure MHR_DIR points to the MHR repo."
+    echo "  Copy it first:  cp ${CODES_DIR}/mhr_tools/smpl_to_mhr_kpts.py \${MHR_DIR}/tools/mhr_smpl_conversion/"
     exit 1
 fi
 

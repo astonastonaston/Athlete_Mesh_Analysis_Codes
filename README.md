@@ -173,10 +173,10 @@ error + contact + lateral suppression + smoothness losses over 1000 iterations
 ### Step 3 — MHR skeleton fitting (pixi)
 
 > **One-time setup:** `smpl_to_mhr_kpts.py` is not part of the public MHR repo — it is
-> included in this repo under `tools/`. Copy it into `$MHR_DIR/tools/mhr_smpl_conversion/`
+> included in this repo under `mhr_tools/`. Copy it into `$MHR_DIR/tools/mhr_smpl_conversion/`
 > before running:
 > ```bash
-> cp tools/smpl_to_mhr_kpts.py $MHR_DIR/tools/mhr_smpl_conversion/
+> cp mhr_tools/smpl_to_mhr_kpts.py $MHR_DIR/tools/mhr_smpl_conversion/
 > ```
 
 ```bash
@@ -312,8 +312,9 @@ Athlete_Mesh_Analysis_Codes/
     convert_mhr_to_smpl_and_rots_nrdf.py <- Step 1: MHR vertices → SMPL params (pixi)
     add_smpl_kpts_to_sequence.py       <- Step 1: add SMPL 2D/3D keypoints to pkl
     convert_smpl_npz_to_pkl.py         <- one-time: convert SMPL .npz to .pkl
-    smpl_to_mhr_kpts.py                <- Step 3: copy to $MHR_DIR/tools/mhr_smpl_conversion/
     inspect_pkl.py                     <- debug: print pkl keys and shapes
+  mhr_tools/                           <- scripts to copy into $MHR_DIR/tools/mhr_smpl_conversion/
+    smpl_to_mhr_kpts.py                <- Step 3: MHR skeleton fitting (not in public MHR repo)
   environment.yml                   <- conda env for Steps 1, 2, 4
   requirements.txt                  <- minimal pip deps for Steps 2 + 4 only
   README.md
