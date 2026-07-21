@@ -36,12 +36,11 @@ CODES_DIR="$(dirname "${SCRIPT_DIR}")"
 NRMF_DIR="$(dirname "${CODES_DIR}")"
 
 ROLLOUT_ROOT="${ROLLOUT_ROOT:-${NRMF_DIR}/outputs_with_moge2/rollout_results}"
-MHR_SCRIPT="${MHR_DIR}/tools/mhr_smpl_conversion/smpl_to_mhr_kpts.py"
+MHR_SCRIPT="${CODES_DIR}/tools/smpl_to_mhr_kpts.py"
 SKIP_EXISTING="${SKIP_EXISTING:-0}"
 
 if [ ! -f "${MHR_SCRIPT}" ]; then
     echo "[ERROR] smpl_to_mhr_kpts.py not found: ${MHR_SCRIPT}"
-    echo "  Copy it first:  cp ${CODES_DIR}/mhr_tools/smpl_to_mhr_kpts.py \${MHR_DIR}/tools/mhr_smpl_conversion/"
     exit 1
 fi
 
@@ -89,7 +88,7 @@ for ATH in "${ATHLETES[@]}"; do
     fi
 
     ( cd "${MHR_DIR}/tools/mhr_smpl_conversion" && \
-      pixi run python smpl_to_mhr_kpts.py \
+      pixi run python "${MHR_SCRIPT}" \
           --athlete         "${ATH}" \
           --out             "${OUT_PKL}" \
           --rollout_dir     "${ROLLOUT_ROOT}" \
