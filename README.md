@@ -172,6 +172,13 @@ error + contact + lateral suppression + smoothness losses over 1000 iterations
 
 ### Step 3 — MHR skeleton fitting (pixi)
 
+> **One-time setup:** `smpl_to_mhr_kpts.py` is not part of the public MHR repo — it is
+> included in this repo under `tools/`. Copy it into `$MHR_DIR/tools/mhr_smpl_conversion/`
+> before running:
+> ```bash
+> cp tools/smpl_to_mhr_kpts.py $MHR_DIR/tools/mhr_smpl_conversion/
+> ```
+
 ```bash
 conda deactivate   # pixi manages its own env — don't nest conda inside it
 
@@ -181,9 +188,9 @@ bash scripts/run_mhr_kpts.sh Goree Walton  # specific athletes
 SKIP_EXISTING=1 bash scripts/run_mhr_kpts.sh
 ```
 
-This runs `smpl_to_mhr_kpts.py` from the MHR library (under `$MHR_DIR/tools/mhr_smpl_conversion/`)
-via `pixi run`. It fits the 127-joint MHR skeleton to SMPL output and saves per-frame
-joint positions plus bone rotation matrices for feet.
+This runs `smpl_to_mhr_kpts.py` (placed above) via `pixi run`. It fits the 127-joint
+MHR skeleton to SMPL output and saves per-frame joint positions plus bone rotation
+matrices for feet.
 
 Output: `outputs_with_moge2/rollout_results/<Athlete>/mhr_kpts.pkl`
 
@@ -305,6 +312,7 @@ Athlete_Mesh_Analysis_Codes/
     convert_mhr_to_smpl_and_rots_nrdf.py <- Step 1: MHR vertices → SMPL params (pixi)
     add_smpl_kpts_to_sequence.py       <- Step 1: add SMPL 2D/3D keypoints to pkl
     convert_smpl_npz_to_pkl.py         <- one-time: convert SMPL .npz to .pkl
+    smpl_to_mhr_kpts.py                <- Step 3: copy to $MHR_DIR/tools/mhr_smpl_conversion/
     inspect_pkl.py                     <- debug: print pkl keys and shapes
   environment.yml                   <- conda env for Steps 1, 2, 4
   requirements.txt                  <- minimal pip deps for Steps 2 + 4 only
